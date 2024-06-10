@@ -1,0 +1,74 @@
+---
+title: "Import json desde API REST"
+author: "ANA ESBEIDY CERVANTES ACOSTA"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+    toc_float: 
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    theme: readable
+    highlight: haddock
+    df_print: paged
+    code_folding: show
+---
+## Instalar y cargar las librerías necesarias
+```{r setup_libraries}
+# Especificar un espejo de CRAN
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+# Cargar las librerías
+library(httr)
+library(jsonlite)
+library(ggplot2)
+```
+
+
+## Definir la URL de la API y obtener los datos
+```{r}
+library(httr)
+library(jsonlite)
+base <- "https://api.covidactnow.org/v2/states.json?"
+apiKey <- "apiKey=41fcb59d556143518c33e95ec44c6076"
+urlApiCovid <- paste0(base, apiKey)
+
+jsondata <- GET(urlApiCovid)
+COVID_list <- fromJSON(rawToChar(jsondata$content), flatten = TRUE)
+```
+## creacion de dataframe 
+
+```{r}
+
+df <- data.frame(State = COVID_list$state, Poblacion = COVID_list$population)
+
+
+
+```
+## Resultado del contenido del DataFRAme Creado
+
+```{r }
+df
+
+```
+## Gráfica de no. de población por estado
+
+A  continuación se muestra una gráfica ordenada desde el estado con mayor número de población por estado
+
+
+```{r plot_population, fig.width=15}
+# Crear el dataframe con los datos obtenidos
+
+# Ordenar los estados por población
+df <- df[order(df$Poblacion, decreasing = FALSE), ]
+
+# Crear el gráfico de barras ordenado con personalizaciones
+ggplot(df, aes(x = reorder(State, -Poblacion), y = Poblacion, fill = State)) +
+  geom_bar(stat = "identity", width = 0.8, color = "black") +
+  labs(title = "Población por Estado", x = "Estado", y = "Población") +
+  scale_fill_viridis_d() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+  theme_minimal()
+
+```
